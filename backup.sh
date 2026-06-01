@@ -6,11 +6,14 @@ BACKUP_DIR="./github-backup"
 PER_PAGE=100
 PAGE=1
 
+git config --global url."https://x-access-token:${TOKEN}@github.com/".insteadOf "https://github.com/"
+
 mkdir -p "$BACKUP_DIR"
 cd "$BACKUP_DIR" || exit 1
 
 while :; do
   echo ">> Loading page $PAGE ..."
+
   REPOS=$(curl -s -u "$USERNAME:$TOKEN" \
     "https://api.github.com/user/repos?per_page=$PER_PAGE&page=$PAGE&type=all")
 
@@ -19,8 +22,9 @@ while :; do
 
   echo "$REPOS" | jq -r '.[].clone_url' | while read -r repo; do
     NAME=$(basename "$repo" .git)
+
     if [ -d "$NAME" ]; then
-      echo ">> $NAME exists – executing git fetch..."
+      echo ">> $NAME exists – git fetch..."
       cd "$NAME" && git fetch --all && cd ..
     else
       echo ">> Cloning $NAME..."
